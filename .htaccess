@@ -1,0 +1,10 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home1/seepocok/public_html/ytapi.pgwiz.qzz.io"
+PassengerBaseURI "/"
+PassengerPython "/home1/seepocok/public_html/ytapi.pgwiz.qzz.io/venv/bin/python"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+# Enable rewrite engine and forward requests
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ passenger_wsgi.py [QSA,L]

@@ -34,9 +34,10 @@ jobs:
             REMOTE_DIR="${{ secrets.CPANEL_REMOTE_DIR }}"
             cd "$REMOTE_DIR"
             
-            # Detect or create Python virtual environment
-            if [ ! -d "venv" ]; then
-              python3 -m venv venv || /usr/local/bin/python3 -m venv venv
+            # Detect or create Python virtual environment with CloudLinux Python 3.11
+            if [ ! -d "venv" ] || [ ! -f "venv/bin/pip" ]; then
+              rm -rf venv
+              /opt/alt/python311/bin/python3 -m venv venv || /opt/alt/python312/bin/python3 -m venv venv || python3 -m venv venv
             fi
             
             chmod -R +x venv/bin || true
