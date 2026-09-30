@@ -1,0 +1,12 @@
+deploy.py
+deploy_serv00.py
+__pycache__/
+*.pyc
+venv/
+.venv/
+tmp/
+*.log
+public/downloads/*
+!public/downloads/.gitkeep
+cookies.txt
+ig_cookies.txt

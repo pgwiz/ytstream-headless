@@ -1,0 +1,51 @@
+name: Deploy Headless API to cPanel
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Sync Code to cPanel via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.CPANEL_SSH_HOST }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          username: ${{ secrets.CPANEL_SSH_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          source: ".,!.git,!.github,!.venv,!.pytest_cache"
+          target: ${{ secrets.CPANEL_REMOTE_DIR }}
+          overwrite: true
+
+      - name: Setup Virtualenv & Reload LiteSpeed WSGI
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CPANEL_SSH_HOST }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          username: ${{ secrets.CPANEL_SSH_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          script: |
+            REMOTE_DIR="${{ secrets.CPANEL_REMOTE_DIR }}"
+            cd "$REMOTE_DIR"
+            
+            # Detect or create Python virtual environment
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv || /usr/local/bin/python3 -m venv venv
+            fi
+            
+            chmod -R +x venv/bin || true
+            ./venv/bin/pip install --no-cache-dir -U -r req.txt yt-dlp
+            
+            # Ensure runtime directories exist
+            mkdir -p tmp downloads
+            
+            # LiteSpeed WSGI graceful reload trigger
+            touch tmp/restart.txt
+            
+            echo "✅ Successfully deployed Headless API to cPanel!"
