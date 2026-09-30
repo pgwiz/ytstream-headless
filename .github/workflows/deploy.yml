@@ -23,7 +23,7 @@ jobs:
           target: ${{ secrets.CPANEL_REMOTE_DIR }}
           overwrite: true
 
-      - name: Setup Virtualenv & Reload LiteSpeed WSGI
+      - name: Update Dependencies & Graceful WSGI Reload
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.CPANEL_SSH_HOST }}
@@ -32,21 +32,21 @@ jobs:
           key: ${{ secrets.CPANEL_SSH_KEY }}
           script: |
             REMOTE_DIR="${{ secrets.CPANEL_REMOTE_DIR }}"
-            cd "$REMOTE_DIR"
+            VENV_DIR="/home1/seepocok/virtualenv/public_html/ytapi.pgwiz.qzz.io/3.13"
             
-            # Detect or create Python virtual environment with CloudLinux Python 3.11
-            if [ ! -d "venv" ] || [ ! -f "venv/bin/pip" ]; then
-              rm -rf venv
-              /opt/alt/python311/bin/python3 -m venv venv || /opt/alt/python312/bin/python3 -m venv venv || python3 -m venv venv
+            # Ensure virtualenv exists
+            if [ ! -d "$VENV_DIR" ]; then
+              mkdir -p /home1/seepocok/virtualenv/public_html/ytapi.pgwiz.qzz.io
+              /opt/alt/python313/bin/python3 -m venv "$VENV_DIR"
             fi
             
-            chmod -R +x venv/bin || true
-            ./venv/bin/pip install --no-cache-dir -U -r req.txt yt-dlp
+            # Install / update dependencies
+            "$VENV_DIR/bin/pip" install --no-cache-dir -U -r "$REMOTE_DIR/req.txt" yt-dlp
             
             # Ensure runtime directories exist
-            mkdir -p tmp downloads
+            mkdir -p "$REMOTE_DIR/tmp" "$REMOTE_DIR/downloads"
             
             # LiteSpeed WSGI graceful reload trigger
-            touch tmp/restart.txt
+            touch "$REMOTE_DIR/tmp/restart.txt"
             
-            echo "✅ Successfully deployed Headless API to cPanel!"
+            echo "✅ Successfully deployed Headless API to cPanel and reloaded LiteSpeed!"
