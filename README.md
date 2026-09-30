@@ -76,6 +76,41 @@ The API will be available at `http://localhost:5000`.
 
 ---
 
+## ☁️ Cloud Platform Deployment & Runner Procedures (Render, Railway, Fly.io)
+
+### 1. Environment Configuration
+Copy `.env.example` to `.env` or configure variables in your PaaS dashboard:
+```bash
+cp .env.example .env
+```
+Key variables:
+- `PORT`: Automatically set by Render/Railway (e.g. `10000`).
+- `HOST`: Set to `0.0.0.0` for containerized environments.
+- `YTDLP_COOKIES`: Raw Netscape cookie content string (for serverless environments without persistent files).
+- `TELEGRAM_TOKEN`: Optional Telegram bot token to run the extractor as an interactive bot.
+
+### 2. Render Web Service (Uvicorn Procedure)
+- **Build Command**: `pip install -r req.txt`
+- **Start Command (Uvicorn ASGI)**:
+  ```bash
+  uvicorn application:asgi_app --host 0.0.0.0 --port $PORT
+  ```
+  *(Alternatively: `gunicorn application:app --bind 0.0.0.0:$PORT`)*
+
+### 3. Universal Platform Runner (`python -m bot.main`)
+To run on platforms like Render where you may want Web API only, Telegram Bot worker, or both combined in a single service:
+- **Start Command**:
+  ```bash
+  python -m bot.main
+  ```
+- **Behavior Matrix**:
+  - `PORT` set, `TELEGRAM_TOKEN` unset: Starts Uvicorn API on `$PORT`.
+  - `PORT` unset, `TELEGRAM_TOKEN` set: Starts Telegram Bot polling worker.
+  - Both `PORT` and `TELEGRAM_TOKEN` set: Runs Uvicorn Web Server in background thread (fulfilling Render's port binding health-check) and Telegram Bot worker in main thread.
+
+---
+
 ## 📜 License
 
 MIT License. Open source and free for personal, developer, and research use.
+

@@ -10,3 +10,8 @@ public/downloads/*
 !public/downloads/.gitkeep
 cookies.txt
 ig_cookies.txt
+.env
+.env.*
+!.env.example
+agent.md
+

@@ -43,5 +43,19 @@ def create_app():
 
 app = create_app()
 
+# ASGI Compatibility Layer for Uvicorn / Hypercorn (Render, Railway, Fly.io)
+try:
+    from asgiref.wsgi import WsgiToAsgi
+    asgi_app = WsgiToAsgi(app)
+except ImportError:
+    try:
+        from a2wsgi import WSGIMiddleware
+        asgi_app = WSGIMiddleware(app)
+    except ImportError:
+        asgi_app = app
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    host = os.environ.get('HOST', '0.0.0.0')
+    debug = os.environ.get('DEBUG', 'False').lower() in ('true', '1')
+    app.run(host=host, port=port, debug=debug)
